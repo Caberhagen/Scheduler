@@ -422,7 +422,8 @@ class Settlers extends NPC
                   ($planet_to_serve['planet_type'] == 'a' ||
                    $planet_to_serve['planet_type'] == 'b' ||
                    $planet_to_serve['planet_type'] == 'c' ||
-                   $planet_to_serve['planet_type'] == 'd'))
+                   $planet_to_serve['planet_type'] == 'd' ||
+                   $planet_to_serve['planet_type'] == 'n'))
                 {
                     if($troops_to_train < 1) $troops_to_train = 0;
                     $sql = 'UPDATE planets SET unittrainid_1 = 1, unittrainid_2 = 2,
@@ -547,7 +548,8 @@ class Settlers extends NPC
 
                 // A - 4
                 // Troops sent to players / CC
-                if($planet_to_serve['planet_type'] == 'a' || $planet_to_serve['planet_type'] == 'b' || $planet_to_serve['planet_type'] == 'c' || $planet_to_serve['planet_type'] == 'd')
+                if($planet_to_serve['planet_type'] == 'a' || $planet_to_serve['planet_type'] == 'b' || $planet_to_serve['planet_type'] == 'c' || $planet_to_serve['planet_type'] == 'd' ||
+                   $planet_to_serve['planet_type'] == 'n')
                 {
                     // Supplies first and second level troops
                     $_ress_4 = $_unit_1 = $_unit_2 = 0;
@@ -630,7 +632,8 @@ class Settlers extends NPC
                     }
                 }
 
-                if($planet_to_serve['planet_type'] == 'm' || $planet_to_serve['planet_type'] == 'o' || $planet_to_serve['planet_type'] == 'p')
+                if($planet_to_serve['planet_type'] == 'm' || $planet_to_serve['planet_type'] == 'o' || $planet_to_serve['planet_type'] == 'p' || $planet_to_serve['planet_type'] == 'g' ||
+                   $planet_to_serve['planet_type'] == 'h')
                 {
                     // Supply workers and specs
                     $_ress_4 = $_unit_5 = $_unit_6 = 0;
@@ -845,6 +848,7 @@ class Settlers extends NPC
                 // A - 3
                 // Let's build a ship!!! We could avoid the use of the scheduler, just to decrease the overhead...
                 // In the definitive version, only certain planets should build ships.
+                /*
                 if($planet_to_serve['planet_type'] == 'h' || $planet_to_serve['planet_type'] == 'n')
                 {
                     $sql = 'SELECT COUNT(*) as ship_queue FROM scheduler_shipbuild WHERE planet_id = '.$planet_to_serve['planet_id'];
@@ -861,8 +865,9 @@ class Settlers extends NPC
                         continue;
                     }
                 }
-
-                if($planet_to_serve['planet_type'] == 'k' || $planet_to_serve['planet_type'] == 'l' || $planet_to_serve['planet_type'] == 'e')
+                */
+                
+                if($planet_to_serve['planet_type'] == 'k' || $planet_to_serve['planet_type'] == 'l')
                 {
                     // We build medium combat ships (hull 7)
                     $sql = 'SELECT COUNT(*) as ship_queue FROM scheduler_shipbuild WHERE planet_id = '.$planet_to_serve['planet_id'];
@@ -879,12 +884,12 @@ class Settlers extends NPC
                         continue;
                     }
                 }
-
-                if($planet_to_serve['planet_type'] == 'f' || $planet_to_serve['planet_type'] == 'g')
+                
+                if($planet_to_serve['planet_type'] == 'f' || $planet_to_serve['planet_type'] == 'e')
                 {
                     $sql = 'SELECT COUNT(*) as ship_queue FROM scheduler_shipbuild WHERE planet_id = '.$planet_to_serve['planet_id'];
                     $s_q = $this->db->queryrow($sql);
-                    // We build big combat ships (hull 12)!!!
+                    // We build combat ships (hull 10)!!!
                     if($s_q['ship_queue'] == 0)
                     {
                         $_buildtime = 2880; // Yep, no access to the DB, let's avoid it...

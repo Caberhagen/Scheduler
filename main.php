@@ -105,6 +105,25 @@ $sdl->finish_job('Mine Job'); // terminates the timer
 
  */
 
+// ########################################################################################
+// ########################################################################################
+$sdl->start_job('Extra-Optimal Range Upgrade Planet Step');
+
+$threshold = new DateTime('now');
+
+date_sub($threshold,date_interval_create_from_date_string("45 days"));
+
+$uts_threshold = date_format($threshold,'U');
+
+$sql= 'UPDATE planets SET planet_available_points = 677 WHERE planet_available_points = 320 AND planet_owner > 10 AND planet_owned_date < '.$uts_threshold;
+
+$db->query($sql);
+
+$res = $db->num_rows();
+
+if ($res > 0) $sdl->log('Extra-Optimal Range Upgrade Planet this time: '.$res);
+
+$sdl->finish_job('Extra-Optimal Range Upgrade Planet Step');
 
 
 // ########################################################################################
@@ -1127,7 +1146,7 @@ else {
                     add_3 = '.$add_3.',
                     add_4 = '.$add_4.',
                     recompute_static = 0,
-                    max_resources = '.($PLANETS_DATA[$planet['planet_type']][6]+($planet['building_12']*50000*$RACE_DATA[$planet['user_race']][20])).',
+                    max_resources = '.($PLANETS_DATA[$planet['planet_type']][6]+($planet['building_12']*20000*$RACE_DATA[$planet['user_race']][20])).',
                     max_worker = '.($PLANETS_DATA[$planet['planet_type']][7]+($planet['research_1']*$RACE_DATA[$planet['user_race']][20]*500)).',
                     max_units = '.($PLANETS_DATA[$planet['planet_type']][7]+($planet['research_1']*$RACE_DATA[$planet['user_race']][20]*500)).'
                 WHERE planet_id = '.$planet['planet_id'];
@@ -1147,8 +1166,13 @@ $sdl->finish_job('Recompute Static Planet Values');
 // ########################################################################################
 // Update Planets
 $sdl->start_job('Update Planet Security Troops');
-$sql='UPDATE planets SET min_security_troops=POW(planet_owner_enum*'.MIN_TROOPS_PLANET.',1+planet_owner_enum*0.01)';
-if(!$db->query($sql)) {$sdl->log(' - Warning: Could not execute query '.$sql);}
+// AC: 07/01/15 - Starting from mySQL 5.5+ queries involving out of range values are interrupted.
+//                At the moment there are no control on troops available on Settlers and Borg
+//                planets, since usually they have more then 1/200 planets
+//                More details here: https://github.com/stfc2/Scheduler/issues/2.
+$sql='UPDATE IGNORE planets SET min_security_troops=POW(planet_owner_enum*'.MIN_TROOPS_PLANET.',1+planet_owner_enum*0.01)
+      WHERE planet_owner <> '.INDEPENDENT_USERID.' AND planet_owner <> '.BORG_USERID;
+if(!$db->query($sql)) {$sdl->log(' - <b>Warning:</b> Could not execute query '.$sql);}
 foreach ($PLANETS_DATA as $key => $planet) {
 $sql='UPDATE planets SET min_security_troops='.$planet[7].' WHERE planet_type="'.$key.'" AND min_security_troops>'.$planet[7];
 if(!$db->query($sql)) {$sdl->log(' - <b>Warning:</b> Could not execute query '.$sql);}
@@ -1209,12 +1233,16 @@ if(!$db->query($sql)) {
 }
 
 
+// AC: 07/01/15 - Avoid reducing resources on unhabitated planets, since
+//                for some reasons min_security_troops could not be zero
+//                while unit_x could be resulting in resources assuming
+//                negative values.
 // Another great optimization by Daywalker ^^
 $sql = 'UPDATE planets
         SET resource_1 = resource_1 - add_1 + add_1 * (1 / min_security_troops * (unit_1*2+unit_2*3+unit_3*4+unit_4*4)),
             resource_2 = resource_2 - add_2 + add_2 * (1 / min_security_troops * (unit_1*2+unit_2*3+unit_3*4+unit_4*4)),
             resource_3 = resource_3 - add_3 + add_3 * (1 / min_security_troops * (unit_1*2+unit_2*3+unit_3*4+unit_4*4))
-        WHERE min_security_troops > unit_1*2+unit_2*3+unit_3*4+unit_4*4';
+        WHERE planet_owner <> 0 AND min_security_troops > unit_1*2+unit_2*3+unit_3*4+unit_4*4';
 
 if(!$db->query($sql)) {
     $sdl->log(' - Warning: Could not update planets resource-diff-troops data! - CONTINUED');
@@ -1271,9 +1299,9 @@ if(!$db->query($sql)) {
 // previous unit, will continues in such that way.
 
 // Unit-1
-$sql = 'UPDATE planets
-        SET unit_1 = unit_1 - ( ( (unit_1 * 2 + unit_2 * 3 + unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 2 )
-        WHERE planet_owner <> 0 AND
+$sql = 'UPDATE IGNORE planets
+        SET unit_1 = FLOOR(unit_1 - ( ( (unit_1 * 2 + unit_2 * 3 + unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 2 ))
+        WHERE planet_owner <> 0 AND unit_1 > 0 AND
               (unit_1 * 2 + unit_2 * 3 + unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) > max_units';
 
 if(!$db->query($sql)) {
@@ -1281,9 +1309,9 @@ if(!$db->query($sql)) {
 }
 
 // Unit-2
-$sql = 'UPDATE planets
-        SET unit_2 = unit_2 - ( ( (unit_2 * 3 + unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 3 )
-        WHERE planet_owner <> 0 AND
+$sql = 'UPDATE IGNORE planets
+        SET unit_2 = FLOOR(unit_2 - ( ( (unit_2 * 3 + unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 3 ))
+        WHERE planet_owner <> 0 AND unit_2 > 0 AND
               (unit_2 * 3 + unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) > max_units';
 
 if(!$db->query($sql)) {
@@ -1291,9 +1319,9 @@ if(!$db->query($sql)) {
 }
 
 // Unit-3
-$sql = 'UPDATE planets
-        SET unit_3 = unit_3 - ( ( (unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 4 )
-        WHERE planet_owner <> 0 AND
+$sql = 'UPDATE IGNORE planets
+        SET unit_3 = FLOOR(unit_3 - ( ( (unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 4 ))
+        WHERE planet_owner <> 0 AND unit_3 > 0 AND
               (unit_3 * 4 + unit_4 * 4 + unit_5 * 4 + unit_6 * 4) > max_units';
 
 if(!$db->query($sql)) {
@@ -1301,9 +1329,9 @@ if(!$db->query($sql)) {
 }
 
 // Unit-4
-$sql = 'UPDATE planets
-        SET unit_4 = unit_4 - ( ( (unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 4 )
-        WHERE planet_owner <> 0 AND
+$sql = 'UPDATE IGNORE planets
+        SET unit_4 = FLOOR(unit_4 - ( ( (unit_4 * 4 + unit_5 * 4 + unit_6 * 4) - max_units) / 4 ))
+        WHERE planet_owner <> 0 AND unit_4 > 0 AND
               (unit_4 * 4 + unit_5 * 4 + unit_6 * 4) > max_units';
 
 if(!$db->query($sql)) {
@@ -1311,9 +1339,9 @@ if(!$db->query($sql)) {
 }
 
 // Unit-5
-$sql = 'UPDATE planets
-        SET unit_5 = unit_5 - ( ( (unit_5 * 4 + unit_6 * 4) - max_units) / 4 )
-        WHERE planet_owner <> 0 AND
+$sql = 'UPDATE IGNORE planets
+        SET unit_5 = FLOOR(unit_5 - ( ( (unit_5 * 4 + unit_6 * 4) - max_units) / 4 ))
+        WHERE planet_owner <> 0 AND unit_5 > 0 AND
               (unit_5 * 4 + unit_6 * 4) > max_units';
 
 if(!$db->query($sql)) {
@@ -1321,9 +1349,9 @@ if(!$db->query($sql)) {
 }
 
 // Unit-6
-$sql = 'UPDATE planets
-        SET unit_6 = unit_6 - ( ( (unit_6 * 4) - max_units) / 4 )
-        WHERE planet_owner <> 0 AND
+$sql = 'UPDATE IGNORE planets
+        SET unit_6 = FLOOR(unit_6 - ( ( (unit_6 * 4) - max_units) / 4 ))
+        WHERE planet_owner <> 0 AND unit_6 > 0 AND
               (unit_6 * 4) > max_units';
 
 if(!$db->query($sql)) {

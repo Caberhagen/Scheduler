@@ -24,6 +24,9 @@
 
 class moves_action_24 extends moves_common {
     function _action_main() {
+        
+        global $RACE_DATA;
+        
         // #############################################################################
         // Prepare Logbook to be able to cancel at any time
 
@@ -523,7 +526,7 @@ class moves_action_24 extends moves_common {
             $n_planets = $pcount['n_planets'];
         }
 
-        if($n_planets >= USER_MAX_PLANETS) {
+        if($n_planets >= $RACE_DATA[$this->move['user_race']][31]) {
             $sql = 'UPDATE ship_fleets
                     SET planet_id = '.$this->move['dest'].',
                         move_id = 0

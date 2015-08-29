@@ -275,7 +275,22 @@ if($this->cmb[MV_CMB_WINNER] == MV_CMB_ATTACKER) {
             return $this->log(MV_M_DATABASE, 'Could not query fleets planetary weapons data! SKIP');
         }
 
-        $planetary_weapons = (int)$plweapons['sum_planetary_weapons'];
+        // 190815 DC Yeah! We need moooar querieeees!!!
+        $sql = 'SELECT COUNT(*) as c3 FROM (ships s) INNER JOIN (ship_templates st) ON st.id =s.template_id
+                 WHERE s.fleet_id IN ('.$this->fleet_ids_str.') AND s.torp >= 5 AND s.experience >= 70 AND st.ship_class = 3';
+
+        if(($c3bonus = $this->db->queryrow($sql)) === false) {
+            return $this->log(MV_M_DATABASE, 'Could not query fleets planetary weapons data! SKIP');
+        }
+        
+        $sql = 'SELECT COUNT(*) as c2 FROM (ships s) INNER JOIN (ship_templates st) ON st.id =s.template_id
+                 WHERE s.fleet_id IN ('.$this->fleet_ids_str.') AND s.torp >= 5 AND s.experience >= 100 AND st.ship_class = 2';
+        
+        if(($c2bonus = $this->db->queryrow($sql)) === false) {
+            return $this->log(MV_M_DATABASE, 'Could not query fleets planetary weapons data! SKIP');
+        }
+        
+        $planetary_weapons = (int)$plweapons['sum_planetary_weapons'] + (int)($c2bonus['c2']*10) + (int)($c3bonus['c3']*50);
 
         if($planetary_weapons == 0) {
             $sql = 'UPDATE ship_fleets
@@ -433,6 +448,34 @@ if($this->cmb[MV_CMB_WINNER] == MV_CMB_ATTACKER) {
     }
 }
 else {
+    // #############################################################################
+    // 17/08/15 - Retreat Management
+    
+    $sql = 'SELECT COUNT(*) as ship_escaped FROM ships WHERE fleet_id IN ('.$this->fleet_ids_str.')';
+    $e_s_c = $this->db->queryrow($sql);
+    if(isset($e_s_c['ship_escaped']) && $e_s_c['ship_escaped'] > 0) {
+        $sql = 'SELECT system_id, planet_distance_id FROM planets WHERE planet_id = '.$this->move['dest'];
+        $e_s_s = $this->db->queryrow($sql);
+        $sql = 'SELECT planet_id FROM planets WHERE system_id = '.$e_s_s['system_id'].' AND planet_id <> '.$this->move['dest'].'
+                       AND planet_distance_id > '.$e_s_s['planet_distance_id'].' ORDER BY planet_distance_id ASC LIMIT 0,1';
+        if(!$res = $this->db->query($sql)) {
+            return $this->log(MV_M_DATABASE, 'Could not read system data!!! SQL is '.$sql);
+        }
+        $rows = $this->db->num_rows();
+        if($rows > 0) {
+            $escaperes = $this->db->fetchrow($res);
+            $newdest = $escaperes['planet_id'];
+        }
+        else {
+            $newdest = $this->move['dest'];
+        }
+        $sql='UPDATE scheduler_shipmovement SET start = '.$this->move['dest'].', dest = '.$newdest.', move_begin = '.$this->CURRENT_TICK.', move_finish = '.($this->CURRENT_TICK + 4).','
+            .' action_code = 28, action_data = 0, n_ships = '.$e_s_c['ship_escaped'].' WHERE move_id = '.$this->move['move_id'];
+        if(!$this->db->query($sql)) {
+            return $this->log(MV_M_DATABASE, 'Could not update movement data!!! SQL is '.$sql);
+        }
+        $this->flags['keep_move_alive'] = true;
+    }    
     // #############################################################################
     // 03/04/08 - AC: Retrieve player language
     switch($this->move['language'])
