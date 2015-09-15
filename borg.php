@@ -240,7 +240,7 @@ class Borg extends NPC
                                                 resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                 min_unit_1, min_unit_2, min_unit_3, min_unit_4,
                                                 max_unit_1, max_unit_2, max_unit_3, max_unit_4,
-                                                buildtime, rof, max_torp)
+                                                buildtime, rof, rof2, max_torp)
                      VALUES ("'.$this->bot['user_id'].'","'.time().'","'.BORG_SPHERE.'","Exploration ship","'.BORG_RACE.'",6,2,
                              -1,-1,-1,-1,-1,
                              -1,-1,-1,-1,-1,
@@ -250,7 +250,7 @@ class Borg extends NPC
                              "50000","50000","50000","500","100","10",
                              "100","25","25","5",
                              "300","70","50",10,
-                             0, 1, 500)';
+                             0, 1, 1, 500)';
 
             if(!$this->db->query($sql)) {
                 $this->sdl->log('<b>Error:</b> could not save BOT template 1 - ABORTED', $log);
@@ -315,7 +315,7 @@ class Borg extends NPC
                                                 resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                 min_unit_1, min_unit_2, min_unit_3, min_unit_4,
                                                 max_unit_1, max_unit_2, max_unit_3, max_unit_4,
-                                                buildtime, rof, max_torp)
+                                                buildtime, rof, rof2, max_torp)
                     VALUES ("'.$this->bot['user_id'].'","'.time().'","'.BORG_CUBE.'","Assimilation ship","'.BORG_RACE.'",10,3,
                             -1,-1,-1,-1,-1,
                             -1,-1,-1,-1,-1,
@@ -325,7 +325,7 @@ class Borg extends NPC
                             "500000","500000","500000","50000","10000","1000",
                             "10000","2500","2500","500",
                             "30000","7000","5000","1000",
-                            0, 5, 1000)';
+                            0, 5, 5, 1000)';
 
             if(!$this->db->query($sql)) {
                 $this->sdl->log('<b>Error:</b> Could not save BOT template 2 - ABORTED', $log);
@@ -393,7 +393,7 @@ class Borg extends NPC
                                                 resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                 min_unit_1, min_unit_2, min_unit_3, min_unit_4,
                                                 max_unit_1, max_unit_2, max_unit_3, max_unit_4,
-                                                buildtime, rof, max_torp)
+                                                buildtime, rof, rof2, max_torp)
                     VALUES ("'.$this->bot['user_id'].'","'.time().'","'.BORG_TACT.'","Combat Ship","'.BORG_RACE.'",11,3,
                             -1,-1,-1,-1,-1,
                             -1,-1,-1,-1,-1,
@@ -403,7 +403,7 @@ class Borg extends NPC
                             "500000","500000","500000","50000","250","250",
                             "10000","2500","2500","500",
                             "65000","21000","15000","5000",
-                            0, 10, 5000)';
+                            0, 10, 10, 5000)';
 
             if(!$this->db->query($sql)) {
                 $this->sdl->log('<b>Error:</b> Could not save BOT template 3 - ABORTED '.$sql, $log);
@@ -471,7 +471,7 @@ class Borg extends NPC
             									resource_1, resource_2, resource_3, resource_4, unit_5, unit_6, 
             									min_unit_1, min_unit_2, min_unit_3, min_unit_4,
             									max_unit_1, max_unit_2, max_unit_3, max_unit_4, 
-            									buildtime, rof, max_torp)
+            									buildtime, rof, rof2, max_torp)
             		VALUES ('.$this->bot['user_id'].','.time().', "'.BORG_UM0.'", "Main Borg Base", '.BORG_RACE.',12,3,
             				-1, -1, -1, -1, -1,
             				-1, -1, -1, -1, -1,
@@ -481,7 +481,7 @@ class Borg extends NPC
             				1, 1, 1, 1, 1, 1,
             				65000, 25000, 25000, 5000,
             				65000, 25000, 25000, 5000,
-            				0, 25, 25000)';
+            				0, 25, 25, 25000)';
 
             if(!$this->db->query($sql)) {
                 $this->sdl->log('<b>Error:</b> Could not save BOT Unimatrix Zero - ABORTED '.$sql, $log);

@@ -48,6 +48,42 @@ define('MV_COMBAT_LEVEL_OUTER', 3); // Fight beyond the planet between foreign p
 
 define('MV_COMBAT_BIN_PATH', $script_path . 'stfc-moves-combat/bin/moves_combat');
 
+// defines form action27
+
+define('LC_FIRST_CONTACT', 1);
+define('LC_DIPLO_SPEECH', 2);
+
+define('LC_SUP_TECH', 3);
+define('LC_SUP_MEDI', 4);
+define('LC_SUP_DFNS', 5);
+define('LC_SUP_AUTO', 6);
+define('LC_SUP_MINE',7);
+define('LC_MIL_ORBITAL', 8); 
+
+define('LC_REL_MULTIC', 10);
+define('LC_REL_TSUPER', 11);
+define('LC_REL_CHAMPN', 12);
+define('LC_REL_INNVTR', 13);
+define('LC_REL_OPPSTR', 14);
+define('LC_REL_PLURLS', 15);
+define('LC_REL_PRESTG', 16);
+define('LC_REL_DEFNDR', 17);
+define('LC_REL_CMPTNT', 18);
+define('LC_REL_LIBERT', 19);
+define('LC_REL_LEADER', 20);
+define('LC_REL_MECENA', 21);
+define('LC_REL_WORSHP', 22);
+define('LC_REL_PREDAT', 23);
+define('LC_REL_STRNGR', 24);
+define('LC_REL_UNABLE', 25);
+define('LC_REL_EXPLOI', 26);
+define('LC_REL_PREY',   27);
+
+define('LC_COLO_FOUNDER', 30);
+define('LC_COLO_GIVER', 31);
+
+define('STL_MAX_ORBITAL', 120);
+
 
 function commonlog($message,$message2,$move_id=0)
 {
@@ -796,6 +832,8 @@ $this->log(MV_M_NOTICE,'AR-query:<br>"'.$sql.'"<br>');
 
                 if($this->cmb[MV_CMB_WINNER] == MV_CMB_ATTACKER) {
 
+                    $this->flags['skip_action'] = true;
+                    
                     $sql = 'SELECT COUNT(*) as ship_escaped FROM ships WHERE fleet_id IN ('.$this->fleet_ids_str.')';
                 //  $this->log(MV_M_NOTICE, 'Active fleet lost the fight, we look for survivors with '.$sql);                    
                     $e_s_c = $this->db->queryrow($sql);
@@ -808,7 +846,6 @@ $this->log(MV_M_NOTICE,'AR-query:<br>"'.$sql.'"<br>');
                                         move_begin = '.$this->CURRENT_TICK.', move_finish = '.($this->CURRENT_TICK + ($this->move['move_finish'] - $this->move['move_begin'])).',
                                         action_code = 28, action_data = 0, n_ships = '.$e_s_c['ship_escaped'].' WHERE move_id = '.$this->move['move_id'];
                         if(!$this->db->query($sql)) $this->log(MV_M_DATABASE, 'Could not update move data with retreat order! '.$sql);                    
-                        $this->flags['skip_action'] = true;
                         $this->flags['keep_move_alive'] = true;
                     }
                 }

@@ -78,7 +78,7 @@ class Settlers extends NPC
                                                 resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                 min_unit_1, min_unit_2, min_unit_3, min_unit_4,
                                                 max_unit_1, max_unit_2, max_unit_3, max_unit_4,
-                                                buildtime, rof, max_torp)
+                                                buildtime, rof, rof2, max_torp)
                      VALUES ("'.INDEPENDENT_USERID.'","'.time().'","Transporter","Settlers Cargo",13,1,0,
                              -1,-1,-1,-1,-1,
                              -1,-1,-1,-1,-1,
@@ -88,7 +88,7 @@ class Settlers extends NPC
                              "4250","5800","4640","105","2","1",
                              "56","0","0","1",
                              "56","0","0","1",
-                             720, 1, 0)';
+                             720, 1, 0, 0)';
 
                if(!$this->db->query($sql)) {
                     $this->sdl->log('<b>Error:</b> could not create TheSettlers - ABORTED', $log);
@@ -113,17 +113,17 @@ class Settlers extends NPC
                                                 resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                 min_unit_1, min_unit_2, min_unit_3, min_unit_4,
                                                 max_unit_1, max_unit_2, max_unit_3, max_unit_4,
-                                                buildtime, rof, max_torp)
+                                                buildtime, rof, rof2, max_torp)
                      VALUES ("'.INDEPENDENT_USERID.'","'.time().'","Centaur","Settlers Cruiser",13,7,2,
                              -1,-1,-1,-1,-1,
                              -1,-1,-1,-1,-1,
-                             "340","300","10","760","450",
-                             "19","15","24","1","8.4",
-                             "25","0","65","65","0",
-                             "41000","38000","21500","550","15","5",
-                             "90","30","10","1",
-                             "110","45","25","3",
-                             960, 1, 75)';
+                             "100","200","16","476","665",
+                             "6","12","26","1","6.5",
+                             "34","0","160","140","0",
+                             "54929","54929","43719","1121","8","4",
+                             "100","0","0","2",
+                             "120","15","20","4",
+                             1121, 6, 4, 85)';
 
                if(!$this->db->query($sql)) {
                     $this->sdl->log('<b>Error:</b> could not create TheSettlers - ABORTED', $log);
@@ -137,7 +137,7 @@ class Settlers extends NPC
         //Check for Settlers battleship ship definition
         $settler_ship_id = (int)$this->db->queryrow('SELECT settler_tmp_3 FROM config WHERE config_set_id = 0');
         if(empty($settler_ship_id['settler_tmp_3'])) {
-               $this->sdl->log('Writing Settler Battleship!', $log);
+               $this->sdl->log('Writing Settler Heavy Cruiser!', $log);
 
                $sql = 'INSERT INTO ship_templates (owner, timestamp, name, description, race, ship_torso, ship_class,
                                                 component_1, component_2, component_3, component_4, component_5,
@@ -148,17 +148,17 @@ class Settlers extends NPC
                                                 resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                 min_unit_1, min_unit_2, min_unit_3, min_unit_4,
                                                 max_unit_1, max_unit_2, max_unit_3, max_unit_4,
-                                                buildtime, rof, max_torp)
-                     VALUES ("'.INDEPENDENT_USERID.'","'.time().'","Achilles","Settlers Battleship",13,11,3,
+                                                buildtime, rof, rof2, max_torp)
+                     VALUES ("'.INDEPENDENT_USERID.'","'.time().'","Achilles","Settlers Battleship",13,9,3,
                              -1,-1,-1,-1,-1,
                              -1,-1,-1,-1,-1,
-                             "500","675","50","1600","650",
-                             "20","22","18","1","8.4",
-                             "25","0","150","150","0",
-                             "65700","60200","38000","1450","46","16",
-                             "200","95","65","6",
-                             "300","150","100","12",
-                             2400, 1, 275)';
+                             "100","210","100","1535","1720",
+                             "6","14","16","1","6.5",
+                             "30","0","180","160","0",
+                             "123872","123872","98592","2528","20","8",
+                             "150","0","0","3",
+                             "170","15","20","5",
+                             2528, 15, 8, 250)';
 
                if(!$this->db->query($sql)) {
                     $this->sdl->log('<b>Error:</b> could not create TheSettlers - ABORTED', $log);
@@ -387,7 +387,11 @@ class Settlers extends NPC
                 
                 // Let's activate the Academy! Sadly, we have to set ALL the fields for clearing them
                 if($planet_to_serve['unittrain_actual'] == 0 &&
-                  ($planet_to_serve['planet_type'] == 'm' || $planet_to_serve['planet_type'] == 'o' || $planet_to_serve['planet_type'] == 'p'))
+                  ($planet_to_serve['planet_type'] == 'g' || 
+                   $planet_to_serve['planet_type'] == 'h' ||                        
+                   $planet_to_serve['planet_type'] == 'm' ||
+                   $planet_to_serve['planet_type'] == 'o' || 
+                   $planet_to_serve['planet_type'] == 'p'))
                 {
                     if($troops_to_train < 1) $troops_to_train = 0;
                     $sql = 'UPDATE planets SET unittrainid_1 = 5, unittrainid_2 = 6,
@@ -737,7 +741,7 @@ class Settlers extends NPC
                         else
                             $_ress_1 = 0;
                     }
-                    elseif($planet_to_serve['planet_type'] == 's')
+                    elseif($planet_to_serve['planet_type'] == 's'|| $planet_to_serve['planet_type'] == 't')
                     {
                         $_ress_2 = round($_ress_rateo*($planet_to_serve['add_2']*20*24));
                         if($_ress_2 < $planet_to_serve['resource_2'])
@@ -748,7 +752,7 @@ class Settlers extends NPC
                         else
                             $_ress_2 = 0;
                     }
-                    elseif($planet_to_serve['planet_type'] == 'i' || $planet_to_serve['planet_type'] == 't')
+                    elseif($planet_to_serve['planet_type'] == 'i')
                     {
                         $_ress_3 = round($_ress_rateo*($planet_to_serve['add_3']*20*24));
                         if($_ress_3 < $planet_to_serve['resource_3'])

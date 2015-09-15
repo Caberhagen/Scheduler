@@ -179,7 +179,8 @@ class Ferengi extends NPC
                                                 value_11, value_12, value_13, value_14, value_15,
                                                 resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                 min_unit_1, min_unit_2, min_unit_3, min_unit_4,
-                                                max_unit_1, max_unit_2, max_unit_3, max_unit_4, buildtime)
+                                                max_unit_1, max_unit_2, max_unit_3, max_unit_4, 
+                                                rof, rof2, max_torp, buildtime)
                     VALUES ("'.$this->bot['user_id'].'","'.time().'","NPC Quark Trade","Transport","'.$this->bot['user_race'].'",1,0,
                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
                             "50","50","0","250","250",
@@ -187,7 +188,8 @@ class Ferengi extends NPC
                             "40","40","1","1","0",
                             "200000","200000","200000","40000","5000","5000",
                             "5000","2500","2500","5000",
-                            "5000","2500","2500",2000,0)';
+                            "5000","2500","2500",2000,
+                             1, 0, 0, 0)';
             if(!$this->db->query($sql)) {
                 $this->sdl->log('<b>Error:</b> could not save BOT template 1 - ABORTED', $log);
                 return;
@@ -207,7 +209,8 @@ class Ferengi extends NPC
                                                value_11, value_12, value_13, value_14, value_15,
                                                resource_1, resource_2, resource_3, resource_4, unit_5, unit_6,
                                                min_unit_1, min_unit_2, min_unit_3, min_unit_4,
-                                               max_unit_1, max_unit_2, max_unit_3, max_unit_4, buildtime)
+                                               max_unit_1, max_unit_2, max_unit_3, max_unit_4, 
+                                               rof, rof2, max_torp, buildtime)
                     VALUES ("'.$this->bot['user_id'].'","'.time().'","NPC Quark Hunter","Combat ship","'.$this->bot['user_race'].'",3,0,
                             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
                             "4000","4000","100","6000","6000",
@@ -215,7 +218,8 @@ class Ferengi extends NPC
                             "60","60","1","1","0",
                             "500000","500000","500000","50000","5000","10000",
                             "10000","2500","2500","5000",
-                            "5000","2500","2500",2000,0)';
+                            "5000","2500","2500",2000,
+                             30, 30, 5000, 0)';
             if(!$this->db->query($sql)) {
                 $this->sdl->log('<b>Error:</b> could not save BOT template 2 - ABORTED', $log);
                 return;

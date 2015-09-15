@@ -346,7 +346,7 @@ class moves_action_24 extends moves_common {
             $sql = 'UPDATE planets
                     SET planet_owner = '.INDEPENDENT_USERID.',
                     planet_owned_date = '.time().',
-                    planet_owner_enum = '.($n_planets - 1).',
+                    planet_owner_enum = '.(($n_planets - 1) > 0 ? ($n_planets - 1) : 0).',
                     planet_name = "Colony'.$this->move['dest'].'",
                     npc_last_action = 0,
                     research_1 = 0,

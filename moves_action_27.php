@@ -300,12 +300,6 @@ class moves_action_27 extends moves_common {
                             }
                             else
                             {
-                                /*
-                                $changed = TRUE;
-                                $log_data1[5] = $log_data2[5] = -1;                                
-                                $new_count_ko = 1;
-                                 * 
-                                 */
                                 // La missione NON SUPERA il Terreno di Caccia
                                 $changed = TRUE;
                                 $log_title2 = 'La tua missione su '.$this->dest['planet_name'].' &egrave; fallita!';                                
@@ -319,35 +313,10 @@ class moves_action_27 extends moves_common {
                         {
                             $changed = TRUE;
                             $log_title2 = 'La tua missione su '.$this->dest['planet_name'].' &egrave; fallita!';
-                            /*
-                            $critical_ok_chance = intval(8800 + (80 * ($event_row['awayteam_startlevel'] - $ship_details['awayteam'])));
-                            if($critical_test > $critical_ok_chance)
-                            {
-                                // La missione NON SUPERA il Terreno di Caccia
-                                $this->do_simple_relation($event_row['user_id'], $event_row['planet_id'], LC_REL_PREDAT, 5);
-                                $this->do_simple_relation($this->move['user_id'], $event_row['planet_id'], LC_REL_PREY, -5);
-                                $new_count_ok += 1;
-                                
-                            }
-                            else
-                            {
-                                // La missione NON SUPERA il Terreno di Caccia e viene uccisa!
-                                $this->do_simple_relation($event_row['user_id'], $event_row['planet_id'], LC_REL_PREDAT, 10);
-                                $this->do_simple_relation($this->move['user_id'], $event_row['planet_id'], LC_REL_PREY, -10);
-                                $sql = 'UPDATE ships SET unit_1 = '.$ship_details['min_unit_1'].', unit_2 = '.$ship_details['min_unit_2'].', unit_3 = '.$ship_details['min_unit_3'].', unit_4 = '.$ship_details['min_unit_4'].', awayteam = 1 WHERE ship_id = '.$ship_details['ship_id'];
-                                if(!$this->db->query($sql)) {
-                                    return $this->log(MV_M_DATABASE, 'Could not create new settlers relations! SKIP!!!');
-                                }
-                                $log_data1[5] = $log_data2[5] = 1;
-                                $new_count_crit_ok += 1;
-                                
-                            }
-                             * 
-                             */
                             // La missione NON SUPERA il Terreno di Caccia e viene uccisa!
                             $this->do_simple_relation($event_row['user_id'], $event_row['planet_id'], LC_REL_PREDAT, 10);
                             $this->do_simple_relation($this->move['user_id'], $event_row['planet_id'], LC_REL_PREY, -10);
-                            $sql = 'UPDATE ships SET unit_1 = '.$ship_details['min_unit_1'].', unit_2 = '.$ship_details['min_unit_2'].', unit_3 = '.$ship_details['min_unit_3'].', unit_4 = '.$ship_details['min_unit_4'].', awayteam = 1 WHERE ship_id = '.$ship_details['ship_id'];
+                                $sql = 'UPDATE ships SET unit_1 = '.$ship_details['min_unit_1'].', unit_2 = '.$ship_details['min_unit_2'].', unit_3 = '.$ship_details['min_unit_3'].', unit_4 = '.$ship_details['min_unit_4'].', awayteam = 1 WHERE ship_id = '.$ship_details['ship_id'];
                             if(!$this->db->query($sql)) {
                                 return $this->log(MV_M_DATABASE, 'Could not create new settlers relations! SKIP!!!');
                             }
@@ -357,6 +326,81 @@ class moves_action_27 extends moves_common {
                         }
                         add_logbook_entry($event_row['user_id'], LOGBOOK_SETTLERS, $log_title1, $log_data1);
                         add_logbook_entry($this->move['user_id'], LOGBOOK_SETTLERS, $log_title2, $log_data2);
+                        break;
+                    case '102': // Razziatori in attesa NASCOSTO
+                        if($event_row['user_id'] == $this->move['user_id']) break;
+                        if($this->action_data[0] != 3) break; // Rimane nascosto finché non arriva una missione di supporto
+                        $new_event_code = '103';
+                        $sql = 'UPDATE settlers_events SET event_code = '.$new_event_code.' WHERE planet_id = '.$this->move['dest'].' AND event_code = '.$event_row['event_code'].' AND user_id = '.$event_row['user_id'];
+                        if(!$this->db->query($sql)) {
+                            return $this->log(MV_M_DATABASE, 'Could not update ship AT level!!! '.$sql);
+                        }                        
+                    case '103': // Razziatori in attesa. Può bloccare la missione - NON usa l'array cache_mood e scrive direttamente
+                                // Attende lo sbarco a terra di altre squadre nel tentativo di sottrarre la nave al proprietario
+                        if($event_row['user_id'] == $this->move['user_id']) break;
+                        if($this->action_data[0] == 5) break;
+                        $check = rand(0, 1000);
+                        $log_data1 = array($this->move['dest'],$this->dest['planet_name'], $event_row['awayteamship_id'], 'N/A', 109, 0);
+                        $log_title1 = 'Rapporto della squadra su '.$this->dest['planet_name'];
+                        $log_data2 = array($this->move['dest'],$this->dest['planet_name'], $ship_details['ship_id'], $name_of_ship, 108, 0);                        
+                        $test_value =  $event_row['awayteam_startlevel'] - $ship_details['awayteam'];
+                        if($test_value > 0) 
+                        {
+                            $success_test = $test_value * 1.334 * 10;
+                            if($success_test > $check) {
+                                // Successo CRITICO! La nave avversaria viene CATTURATA
+                                $log_title2 = 'La tua missione su '.$this->dest['planet_name'].' &egrave; fallita!';
+                                $this->do_simple_relation($event_row['user_id'], $event_row['planet_id'], LC_REL_PREDAT, 10);
+                                $this->do_simple_relation($this->move['user_id'], $event_row['planet_id'], LC_REL_PREY, -10);
+                                $newatlevel = $event_row['awayteam_startlevel'] + $event_row['count_ok'] * 2.0 + 15.0;
+                                $sql = 'UPDATE ships SET unit_1 = '.$event_row['unit_1'].', unit_2 = '.$event_row['unit_2'].', unit_3 = '.$event_row['unit_3'].', unit_4 = '.$event_row['unit_4'].',
+                                                         awayteam = '.$newatlevel.', user_id = '.$event_row['user_id'].', awayteamplanet_id = 0 WHERE ship_id = '.$ship_details['ship_id'];
+                                if(!$this->db->query($sql)) {
+                                    return $this->log(MV_M_DATABASE, 'Could not update captured ship data! SKIP!!! '.$sql);
+                                }
+                                $sql = 'UPDATE ship_fleets SET user_id = '.$event_row['user_id'].', fleet_name = "Catturata" WHERE fleet_id = '.$ship_details['fleet_id'];
+                                if(!$this->db->query($sql)) {
+                                    return $this->log(MV_M_DATABASE, 'Could not update captured fleet data! SKIP!!! '.$sql);
+                                }
+                                $sql = 'UPDATE ships SET awayteam = 1, awayteamplanet_id = 0 WHERE ship_id = '.$event_row['awayteamship_id'];
+                                if(!$this->db->query($sql)) {
+                                    return $this->log(MV_M_DATABASE, 'Could not update ship AT level!!! '.$sql);
+                                }
+                                $log_data1[5] = $log_data2[5] = 1;
+                                $event_delete = TRUE;
+                                $halt_mission = TRUE;                                
+                            }
+                            else {
+                                // Successo! La squadra avversaria è battuta e viene respinta
+                                $log_title2 = 'La tua missione su '.$this->dest['planet_name'].' &egrave; fallita!';                                
+                                $this->do_simple_relation($event_row['user_id'], $event_row['planet_id'], LC_REL_PREDAT, 5);
+                                $this->do_simple_relation($this->move['user_id'], $event_row['planet_id'], LC_REL_PREY, -5);                                
+                                $changed = TRUE;
+                                $new_count_ok += 1;
+                                $halt_mission = TRUE;
+                            }
+                        }
+                        else
+                        {
+                            $failure_test = -1 * ($test_value * 1.334 * 10);
+                            if($failure_test > $check) {
+                                // Fallimento CRITICO! I razziatori vengono UCCISI!
+                                $log_title2 = 'La tua missione su '.$this->dest['planet_name'].' ha subito un agguato!';
+                                $log_data1[5] = $log_data2[5] = -2;
+                                $event_delete = TRUE;
+                                $sql = 'UPDATE ships SET awayteam = 1, awayteamplanet_id = 0 WHERE ship_id = '.$event_row['awayteamship_id'];
+                                if(!$this->db->query($sql)) {
+                                    return $this->log(MV_M_DATABASE, 'Could not update ship AT level!!! '.$sql);
+                                }                                
+                            }
+                            else {
+                                // Fallimento!!! I razziatori non riescono a battere la squadra.
+                                $log_title2 = 'La tua missione su '.$this->dest['planet_name'].' ha subito un agguato!';
+                                $log_data1[5] = $log_data2[5] = -1;
+                                $changed = TRUE;                                
+                                $new_count_ko += 1;
+                            }
+                        }
                         break;
                     case '120':
                         // Presidio Federale.
@@ -1497,17 +1541,18 @@ class moves_action_27 extends moves_common {
                 // Event codes
                 $event_codes_table = array(
                 '0'  => 100,
-                '1'  => 120,
-                '2'  => 121,
-                '3'  => 122,
-                '4'  => 123,
-                '5'  => 124,
-                '10' => 130,
-                '11' => 131,
-                '12' => 132,
-                '13' => 133,
-                '14' => 134,
-                '15' => 150
+                '1'  => 102,
+                '10'  => 120,
+                '20'  => 121,
+                '30'  => 122,
+                '40'  => 123,
+                '50'  => 124,
+                '100' => 130,
+                '110' => 131,
+                '120' => 132,
+                '130' => 133,
+                '140' => 134,
+                '150' => 150
                 );
                 $log_data = array($this->move['dest'],$this->dest['planet_name'], $ship_details['ship_id'], $name_of_ship, 10, 0);
                 $e_c_i = $this->action_data[1];
